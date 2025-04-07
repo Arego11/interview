@@ -1,3 +1,9 @@
+This web app is designed to prepare you for your next technical interview.
+
+Create an account, login, choose what you want to be interviewed for, choose your mastery level, and enjoy practicing with AI.
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
