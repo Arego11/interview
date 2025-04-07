@@ -314,6 +314,8 @@
   @apply bg-gradient-to-l from-[#FFFFFF] to-[#CAC5FE];
 }
 
+
+
 @utility flex-center {
   @apply flex items-center justify-center;
 }
