@@ -33,7 +33,7 @@ export async function POST(request: Request) {
             questions: JSON.parse(questions),
             userId: userid,
             finalized: false,
-            coverImage: getRandomInterviewCover,
+            coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString()
         }
 
