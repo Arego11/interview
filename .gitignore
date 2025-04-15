@@ -43,4 +43,3 @@ next-env.d.ts
 #firebase
 
 *.firebase-adminsdk-*.json
-interivews-firebase-adminsdk-*.json
