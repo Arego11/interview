@@ -21,4 +21,6 @@ const initFirebaseAdmin = () => {
     }
 }
 
+console.log("Connected to Firebase project:", process.env.FIREBASE_PROJECT_ID);
+
 export const { auth, db } = initFirebaseAdmin();
