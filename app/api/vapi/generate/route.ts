@@ -5,8 +5,6 @@ import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
-
-  console.log("HIT THE POST ROUTE");
   const { type, role, level, techstack, amount, userid } = await request.json();
 
   try {
@@ -27,31 +25,18 @@ export async function POST(request: Request) {
     `,
     });
 
-    console.log("Raw questions from AI:", questions);
-
-    let parsedQuestions;
-    try {
-        parsedQuestions = JSON.parse(questions);
-        console.log("Parsed questions:", parsedQuestions);
-    } catch (parseError) {
-        console.error("Failed to parse questions JSON:", parseError);
-        return Response.json({ success: false, error: "Invalid JSON from AI" }, { status: 500 });
-    }
-
     const interview = {
-        role,
-        type,
-        level,
-        techstack: techstack.split(","),
-        questions: parsedQuestions,
-        userId: userid,
-        finalized: true,
-        coverImage: getRandomInterviewCover(),
-        createdAt: new Date().toISOString(),
+      role: role,
+      type: type,
+      level: level,
+      techstack: techstack.split(","),
+      questions: JSON.parse(questions),
+      userId: userid,
+      finalized: true,
+      coverImage: getRandomInterviewCover(),
+      createdAt: new Date().toISOString(),
     };
 
-
-    console.log("Adding to Firestore project:", process.env.FIREBASE_PROJECT_ID);
     await db.collection("interviews").add(interview);
 
     return Response.json({ success: true }, { status: 200 });
@@ -64,17 +49,3 @@ export async function POST(request: Request) {
 export async function GET() {
   return Response.json({ success: true, data: "Thank you!" }, { status: 200 });
 }
-
-{/*
-    sign in information
-
-    {
-    "type": "mixed",
-    "role": "frontend",
-    "level": "senior",
-    "techstack": "next.js",
-    "amount": "7",
-    "userid":
-    "PJ5IarwrsBgybZAFnDpbi02hbL62" -> your userID
-}
-    */}
