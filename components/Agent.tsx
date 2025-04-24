@@ -1,13 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
-//import { interviewer } from "@/constants";
-//import { createFeedback } from "@/lib/actions/general.action";
+import { interviewer } from "@/constants";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -25,6 +23,8 @@ const Agent = ({
   userName,
   userId,
   type,
+  interviewId,
+  questions
 }: AgentProps) => {
   const router = useRouter();
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -72,21 +72,58 @@ const Agent = ({
     };
   }, []);
 
+  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+  console.log("Generate feedback here...");
+
+  // TODO: Create a server action that generates feedback
+  const { success, id } = {
+    success: true,
+    id: "feedback-id",
+  };
+
+  if (success && id) {
+    router.push(`/interview/${interviewId}/feedback`);
+  } else {
+    console.log("Error saving feedback");
+    router.push("/");
+  }
+}; 
+
   useEffect(() => {
-    if (callStatus === CallStatus.FINISHED) router.push("/");
-    
+    if (callStatus === CallStatus.FINISHED) {
+      if (type === "generate") {
+        router.push("/");
+      } else {
+        handleGenerateFeedback(messages)
+      }
+    }
   }, [messages, callStatus, type, userId]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
+    if (type === 'generate') {
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
         variableValues: {
           username: userName,
           userid: userId,
         }
       })
+    } else {
+      let formattedQuestiions = ''
+      if (questions) {
+        formattedQuestiions = questions
+          .map((question) => `- ${question}`)
+          .join('\n')
+      }
+
+      await vapi.start(interviewer, {
+        variableValues: {
+          questions: formattedQuestiions
+        }
+      })
     }
+  }
 
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED)
