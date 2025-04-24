@@ -2,7 +2,7 @@
 
 A web application for conducting mock interviews with AI-powered feedback and analysis.
 
-## 🚀 Features
+##  Features
 
 - **AI-Powered Feedback**: Analyze interviews and provide detailed feedback.
 - **Dynamic Tech Stack Icons**: Display relevant technologies for each interview.
