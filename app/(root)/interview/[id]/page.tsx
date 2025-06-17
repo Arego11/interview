@@ -28,8 +28,8 @@ const page = async ({params}: RouteParams) => {
             </div>
         </div>
         < Agent
-                userName={user?.name || ''}
-                userId={user?.id}
+                userName={user?.name || 'Guest'}
+                userId={user?.id || 'guest'}
                 interviewId={id}
                 type="interview"
                 questions={interview.questions}

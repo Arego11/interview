@@ -9,6 +9,11 @@ import { feedbackSchema } from "@/constants";
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
 
+  // Skip feedback creation for guest users
+  if (!userId || userId === 'guest') {
+    return { success: false, message: "Guest users cannot save feedback" };
+  }
+
   try {
     const formattedTranscript = transcript
       .map(
@@ -77,6 +82,10 @@ export async function getFeedbackByInterviewId(
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
 
+  if (!userId || userId === 'guest') {
+    return null;
+  }
+
   const querySnapshot = await db
     .collection("feedback")
     .where("interviewId", "==", interviewId)
@@ -93,33 +102,51 @@ export async function getFeedbackByInterviewId(
 export async function getLatestInterviews(
   params: GetLatestInterviewsParams
 ): Promise<Interview[] | null> {
-  const { userId, limit = 20 } = params;
+  const { limit = 20 } = params;
 
-  const interviews = await db
-    .collection("interviews")
-    .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
-    .get();
+  try {
+    // Simplified query to avoid composite index requirement
+    const interviews = await db
+      .collection("interviews")
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .get();
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+    // Filter finalized interviews in JavaScript instead of in the query
+    const allInterviews = interviews.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Interview[];
+
+    const finalizedInterviews = allInterviews.filter(interview => interview.finalized === true);
+
+    return finalizedInterviews as Interview[];
+  } catch (error) {
+    console.error("Error fetching latest interviews:", error);
+    return [];
+  }
 }
 
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
-  const interviews = await db
-    .collection("interviews")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .get();
+  if (!userId || userId === 'guest') {
+    return [];
+  }
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+  try {
+    const interviews = await db
+      .collection("interviews")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    return interviews.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Interview[];
+  } catch (error) {
+    console.error("Error fetching user interviews:", error);
+    return [];
+  }
 }

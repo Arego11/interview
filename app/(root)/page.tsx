@@ -10,13 +10,14 @@ const Page = async () => {
 
   const user = await getCurrentUser()
 
+  // Only fetch user-specific interviews if user exists
   const [userInterviews, latestInterviews] = await Promise.all([
-    await getInterviewsByUserId(user?.id!),
-    await getLatestInterviews({ userId: user?.id! })
+    user ? await getInterviewsByUserId(user.id) : Promise.resolve([]),
+    await getLatestInterviews({ userId: user?.id || 'guest' })
   ])
 
-  const hasPastInterviews = userInterviews?.length > 0
-  const hasUpcomingInterviews = latestInterviews?.length > 0
+  const hasPastInterviews = userInterviews && userInterviews.length > 0
+  const hasUpcomingInterviews = latestInterviews && latestInterviews.length > 0
 
   return (
     <>
@@ -24,8 +25,13 @@ const Page = async () => {
         <div className="flex flex-col gap-6 max-w-lg">
           <h2> Get interview-Ready with AI-Powered Practice and feedback</h2>
           <p className="text-lg">
-            Practice on real interview questinos and get instant feedback on your answers.
+            Practice on real interview questions and get instant feedback on your answers.
           </p>
+          {!user && (
+            <p className="text-sm text-gray-400">
+              💡 Sign in to save your interview history and track your progress over time.
+            </p>
+          )}
           <Button asChild className="btn-primiary max-sm:w-full">
             <Link href="/interview">Start Interview</Link>
           </Button>
@@ -34,15 +40,19 @@ const Page = async () => {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+        <h2>{user ? 'Your Interviews' : 'Recent Interviews'}</h2>
 
         <div className="interviews-section">
           {
-            hasPastInterviews ? (
-              userInterviews?.map((interview) => (
-                <InterviewCard {...interview} key={interview.id} />
-              ))) : (
-              <p>You haven&apos;t taken  any interviews yet</p>
+            user ? (
+              hasPastInterviews ? (
+                userInterviews?.map((interview) => (
+                  <InterviewCard {...interview} key={interview.id} />
+                ))) : (
+                <p>You haven&apos;t taken any interviews yet</p>
+              )
+            ) : (
+              <p>Sign in to view your personal interview history</p>
             )}
         </div>
       </section>

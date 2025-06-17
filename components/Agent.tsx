@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
@@ -31,8 +31,6 @@ const Agent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
-
-  const lastMessage= messages[messages.length - 1]
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -73,23 +71,29 @@ const Agent = ({
     };
   }, []);
 
-  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-  console.log("Generate feedback here...");
+  const handleGenerateFeedback = useCallback(async (messages: SavedMessage[]) => {
+    console.log("Generate feedback here...");
 
+    // For guest users, skip saving feedback and just redirect
+    if (!userId || userId === 'guest' || !interviewId) {
+      console.log("Guest user or missing interview ID - skipping feedback save");
+      router.push("/");
+      return;
+    }
 
     const { success, feedbackId: id } = await createFeedback({
-      interviewId: interviewId!,
-      userId: userId!,
+      interviewId: interviewId,
+      userId: userId,
       transcript: messages
     })
 
-  if (success && id) {
-    router.push(`/interview/${interviewId}/feedback`);
-  } else {
-    console.log("Error saving feedback");
-    router.push("/");
-  }
-}; 
+    if (success && id) {
+      router.push(`/interview/${interviewId}/feedback`);
+    } else {
+      console.log("Error saving feedback");
+      router.push("/");
+    }
+  }, [userId, interviewId, router]); 
 
   useEffect(() => {
     if (callStatus === CallStatus.FINISHED) {
@@ -99,7 +103,7 @@ const Agent = ({
         handleGenerateFeedback(messages)
       }
     }
-  }, [messages, callStatus, type, userId]);
+  }, [messages, callStatus, type, userId, router, handleGenerateFeedback]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
